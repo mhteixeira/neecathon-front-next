@@ -5,81 +5,137 @@ import Image from 'next/image'
 import styles from '../styles/Feedbacks.module.css'
 import Header from '../components/Header'
 import FeedbackCard from '../components/FeedbackCard'
-// import fsPromises from 'fs/promises';
+import fsPromises from 'fs/promises';
 import path from 'path'
 import { useEffect, useState } from 'react'
+import useSWR from 'swr'
 
-export default function Feedbacks(props) {
+
+export default function Feedbacks({ objectData, data }) {
+
+    const [selectedCard, setSelectedCard] = useState(1);
+    const [positiveTerms, setPositiveTerms] = useState([]);
+    const [negativeTerms, setNegativeTerms] = useState([]);
+    const feedbacks = data
+    const users = objectData.users
+
+    console.log(data)
+    console.log(feedbacks)
+
+    useEffect(() => {
+        const data = JSON.parse(feedbacks[`${selectedCard-1}`].comment_absa_result.split(`'`).join(`"`))
+        let p = []; let n = []
+        for (const [key, value] of Object.entries(data)) {
+            if(value == 1) {
+                p.push(key)
+            } else {
+                n.push(key)
+            }
+        }
+        setPositiveTerms(p); setNegativeTerms(n);
+    }, [selectedCard]);
+    
   return (
     <>
-      <Head>
+    <Head>
         <title>VoE - Feedbacks</title>
         <meta name="description" content="Submission for NEECathon'22" />
         <link rel="icon" href="/icon.svg" />
         <link rel="preconnect" href="https://fonts.googleapis.com"/>
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
         <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet"/>
-      </Head>
+    </Head>
+
     <Header page={2}></Header>
 
     
-    <div className={styles.container}>  
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h2>Learn &rarr;</h2>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className={styles.card}
-          >
-            <h2>Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.card}
-          >
-            <h2>Deploy &rarr;</h2>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+    <div className={styles.container}>
+        <div className={styles.users}>
+            <div className={styles.title}>
+                <h3>Feedbacks</h3>
+                <input placeholder='Search by name or position'></input>
+            </div>
+            <div className={styles.usersList}>
+                {feedbacks.map((e) =>                
+                    <FeedbackCard 
+                        key={e.id}
+                        isSelected={Number(e.id)==selectedCard}
+                        data={{
+                            "id":e.person_id, 
+                            "name": users[e.person_id].name, 
+                            "job":users[e.person_id].job,
+                            // "month":e.month,
+                            // "year":e.year,
+                            "month":'9',
+                            "year":'2022',
+                            "status": e.comment_sa_result.substring(2, 5)=='pos'
+                        }}
+                        onClick={() => {
+                            setSelectedCard(e.id)
+                        }}
+                    />
+                )}
+                    
+            </div>
         </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <span className={styles.logo}>
-            <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-          </span>
-        </a>
-      </footer>
+        <div className={styles.hline}></div>
+        <div className={styles.feedbackDetails}>
+            <div className={styles.detailedFeedbackUser}>
+                <img src={`./images/user${feedbacks[`${selectedCard-1}`].person_id}.svg`}></img>
+                <div className={styles.detailedFeedbackUserPersonalInfoText}>
+                  {/* <span>{feedbacks[`${selectedCard-1}`].month}/{feedbacks[`${selectedCard-1}`].year}</span> */}
+                  <span>{'09/2022'}</span>
+                  <h4>{users[feedbacks[`${selectedCard-1}`].person_id].name}</h4>
+                  <p>{users[feedbacks[`${selectedCard-1}`].person_id].job}</p>
+              </div>
+            </div>
+            <div className={styles.detailedFeedbackText}>
+                <h4>Feedback</h4>
+                <div className={styles.detailedFeedbackTextDiv}>
+                    <p>{feedbacks[`${selectedCard-1}`].comment_text}</p>
+                    <img 
+                        src={feedbacks[`${selectedCard-1}`].comment_sa_result.substring(2, 5)=='pos' ? './images/mood.svg' : './images/mood_bad.svg'} 
+                        className={styles.feedbackStatus}/>
+                </div>
+            </div>
+            <div className={styles.detailedFeedbackABSA}>
+                <h4>Sentiment Analysis</h4>
+                <div className={styles.resultsABSA}>
+                    <div className={styles.stratifiedResultsABSA}>
+                        <img src={'./images/thumb_up.svg'} 
+                            className={styles.feedbackStatus}/>
+                        <ul>
+                            {positiveTerms.map((e) => {
+                                return (<li key={e}>{e.charAt(0).toUpperCase() + e.slice(1)}</li>)
+                            })}
+                        </ul>
+                    </div>
+                    <div className={styles.stratifiedResultsABSA}>
+                        <img src={'./images/thumb_down_alt.svg'} 
+                            className={styles.feedbackStatus}/>
+                        <ul>
+                            {negativeTerms.map((e) => {
+                                return (<li key={e}>{e.charAt(0).toUpperCase() + e.slice(1)}</li>)
+                            })}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     </>
   )
+}
+
+export async function getStaticProps() {
+    const filePath = path.join(process.cwd(), 'data.json');
+    const jsonData = await fsPromises.readFile(filePath);
+    const objectData = JSON.parse(jsonData);
+
+    const res = await fetch(`http://3.88.45.53:8000/api/analysis/?format=json`);
+    const data = await res.json()
+
+    return {
+        props: { objectData, data }
+    }
 }
