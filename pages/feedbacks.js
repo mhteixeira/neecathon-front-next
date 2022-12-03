@@ -1,21 +1,28 @@
+/* eslint-disable @next/next/no-page-custom-font */
+/* eslint-disable @next/next/no-img-element */
 import Head from 'next/head'
 import Image from 'next/image'
-import styles from '../styles/Home.module.css'
+import styles from '../styles/Feedbacks.module.css'
 import Header from '../components/Header'
+import FeedbackCard from '../components/FeedbackCard'
+// import fsPromises from 'fs/promises';
+import path from 'path'
+import { useEffect, useState } from 'react'
 
-export default function Home() {
+export default function Feedbacks(props) {
   return (
     <>
       <Head>
-        <title>VoE - Dashboard</title>
+        <title>VoE - Feedbacks</title>
         <meta name="description" content="Submission for NEECathon'22" />
         <link rel="icon" href="/icon.svg" />
         <link rel="preconnect" href="https://fonts.googleapis.com"/>
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
         <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet"/>
       </Head>
-    <Header page={1}></Header>
+    <Header page={2}></Header>
 
+    
     <div className={styles.container}>  
       <main className={styles.main}>
         <h1 className={styles.title}>
