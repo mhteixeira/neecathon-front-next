@@ -25,7 +25,7 @@ export default function Home({ data }) {
 
   useEffect(() => {
     const regexType = /(?<=\').+?(?=\')/; // grap 'pos' 'neg'
-    let terms = feedbacks.filter(feedback => feedback.id != 2828)
+    let terms = feedbacks.filter(feedback => feedback.id != 2828 && feedback.id != 6898)
       .map((feedback) => {
         console.log(feedback.id)
         return JSON.parse(feedback.comment_absa_result.split(`'`).join(`"`));
@@ -232,8 +232,8 @@ export default function Home({ data }) {
                 <div style={{ position: "relative" }}>
                   <div className={`${styles.dropdown} ${styles.selectedCard}`}>
                     <ul>
-                      <li>Companies who suffer from ${generalTerms.sort((a, b) => a.value - b.value)[0]?.word} usually give more sallary to employeers</li>
-                      <li>Companies who suffer from ${generalTerms.sort((a, b) => a.value - b.value)[0]?.word} usually make the environment more healthier</li>
+                      <li>Companies who suffer from {generalTerms.sort((a, b) => a.value - b.value)[0]?.word} usually give more sallary to employeers</li>
+                      <li>Companies who suffer from {generalTerms.sort((a, b) => a.value - b.value)[0]?.word} usually make the environment more healthier</li>
                     </ul>
                   </div>
                 </div>

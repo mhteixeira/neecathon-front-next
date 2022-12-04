@@ -8,18 +8,19 @@ import FeedbackCard from "../components/FeedbackCard";
 import fsPromises from "fs/promises";
 import path from "path";
 import { useEffect, useState } from "react";
+import { monthString } from "../components/utils/date";
 
 export default function Feedbacks({ objectData, data }) {
-  const [selectedCard, setSelectedCard] = useState(1);
+  const [selectedCard, setSelectedCard] = useState(data[0]?.id);
   const [positiveTerms, setPositiveTerms] = useState([]);
   const [negativeTerms, setNegativeTerms] = useState([]);
   const [feedbacks, setFeedbacks] = useState(data);
   const users = objectData.users;
+
   useEffect(() => {
-    
-      const data = JSON.parse(
-        feedbacks[`${selectedCard - 1}`].comment_absa_result.split(`'`).join(`"`)
-      );
+    const data = JSON.parse(
+      feedbacks.filter(feedback => feedback.id == selectedCard )[0]?.comment_absa_result.split(`'`).join(`"`)
+    );
     let p = [];
     let n = [];
     for (const [key, value] of Object.entries(data)) {
@@ -33,15 +34,20 @@ export default function Feedbacks({ objectData, data }) {
     setNegativeTerms(n);
   }, [selectedCard]);
 
-
   const handleChange = (e) => {
-    if(e.target.value){
-        setFeedbacks(feedbacks.filter(feedback => users[feedback.person_id].sector.toLowerCase().includes(e.target.value.toLowerCase())));
-        console.log(feedbacks);
+    if (e.target.value) {
+      setFeedbacks(
+        feedbacks.filter((feedback) =>
+          users[feedback.person_id].sector
+            .toLowerCase()
+            .includes(e.target.value.toLowerCase())
+        )
+      );
+      console.log(feedbacks);
     } else {
-        setFeedbacks(data);
+      setFeedbacks(data);
     }
-  }
+  };
 
   return (
     <>
@@ -63,7 +69,11 @@ export default function Feedbacks({ objectData, data }) {
         <div className={styles.users}>
           <div className={styles.title}>
             <h3>Feedbacks</h3>
-            <input placeholder="Search by sector" className={styles.icon} onChange={handleChange}></input>
+            <input
+              placeholder="Search by sector"
+              className={styles.icon}
+              onChange={handleChange}
+            ></input>
           </div>
           <div className={styles.usersList}>
             {feedbacks.map((e) => (
@@ -80,8 +90,8 @@ export default function Feedbacks({ objectData, data }) {
                   job: users[e.person_id].sector,
                   // "month":e.month,
                   // "year":e.year,
-                  month: "9",
-                  year: "2022",
+                  month: monthString.indexOf(e.month) + 1,
+                  year: e.year,
                   status: e.comment_sa_result.substring(2, 5) == "pos",
                 }}
                 onClick={() => {
@@ -96,32 +106,46 @@ export default function Feedbacks({ objectData, data }) {
           <div className={styles.detailedFeedbackUser}>
             <img
               src={`./images/user${
-                data[`${selectedCard - 1}`]?.person_id
-              }.webp`
-                } style={{width: '150px', height: '90px', objectFit: 'cover'}}
+                data.filter((feedback) => feedback.id == selectedCard)[0]
+                  ?.person_id
+              }.webp`}
+              style={{ width: "150px", height: "90px", objectFit: "cover" }}
             ></img>
             <div className={styles.detailedFeedbackUserPersonalInfoText}>
               {/* <span>{feedbacks[`${selectedCard-1}`].month}/{feedbacks[`${selectedCard-1}`].year}</span> */}
-              <span>{"09/2022"}</span>
-              <h4>{`Feedback #${data[
-                `${selectedCard - 1}`
-              ]?.id?.toLocaleString("en-US", {
-                minimumIntegerDigits: 2,
-                useGrouping: false,
-              })}`}</h4>
-              <p>{users[data[`${selectedCard - 1}`]?.person_id]?.sector + ' Sector'}</p>
+              <span>{`${monthString.indexOf(
+                data.filter((feedback) => feedback.id == selectedCard)[0]?.month
+              ) + 1}/${
+                data.filter((feedback) => feedback.id == selectedCard)[0]?.year
+              }`}</span>
+              <h4>{`Feedback #${data
+                .filter((feedback) => feedback.id == selectedCard)[0]
+                ?.id?.toLocaleString("en-US", {
+                  minimumIntegerDigits: 2,
+                  useGrouping: false,
+                })}`}</h4>
+              <p>
+                {users[
+                  data.filter((feedback) => feedback.id == selectedCard)[0]
+                    ?.person_id
+                ]?.sector + " Sector"}
+              </p>
             </div>
           </div>
           <div className={styles.detailedFeedbackText}>
             <h4>Feedback</h4>
             <div className={styles.detailedFeedbackTextDiv}>
-              <p>{data[`${selectedCard - 1}`]?.comment_text}</p>
+              <p>
+                {
+                  data.filter((feedback) => feedback.id == selectedCard)[0]
+                    ?.comment_text
+                }
+              </p>
               <img
                 src={
-                    data[`${selectedCard - 1}`]?.comment_sa_result?.substring(
-                    2,
-                    5
-                  ) == "pos"
+                  data
+                    .filter((feedback) => feedback.id == selectedCard)[0]
+                    ?.comment_sa_result?.substring(2, 5) == "pos"
                     ? "./images/mood.svg"
                     : "./images/mood_bad.svg"
                 }
@@ -170,13 +194,18 @@ export async function getStaticProps() {
   const filePath = path.join(process.cwd(), "data.json");
   const jsonData = await fsPromises.readFile(filePath);
   const objectData = JSON.parse(jsonData);
-  const res = path.join(process.cwd(), "test.json");
-  const data = JSON.parse(await fsPromises.readFile(res));
-  //const res = await fetch(`http://3.88.45.53:8000/api/analysis/?format=json`);
-  //const data = await res.json();
-  data.map(feedback => {
-    feedback.person_id = Math.floor(Math.random() * (3+ 1))})
+  //const res = path.join(process.cwd(), "test.json");
+  //const data = JSON.parse(await fsPromises.readFile(res));
+  const res = await fetch(`http://3.88.45.53:8000/api/analysis/?format=json`);
+  const data = await res.json();
+  data.map((feedback) => {
+    feedback.person_id = Math.floor(Math.random() * (3 + 1));
+    if (feedback.month == "12") {
+      feedback.month = "Dec";
+    }
+  });
+  const filteredData = data.sort((a, b) =>  b.id- a.id).slice(0, 100);
   return {
-    props: { objectData, data },
+    props: { objectData, data: filteredData },
   };
 }
