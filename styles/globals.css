@@ -4,6 +4,7 @@ body {
   margin: 0;
   font-family: 'Lato', sans-serif;
   background-color: #FAF8FA;
+  overflow-x:hidden;
 }
 
 a {

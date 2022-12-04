@@ -1,5 +1,8 @@
 .container {
   padding: 0 2rem;
+  scale: 0.8;
+  margin-top: -100px;
+  overflow-x:hidden;
 }
 
 .main {
@@ -165,10 +168,10 @@
   border-top-left-radius: 0px;
   border-top-right-radius: 0px;
   transition: color 0.15s ease, border-color 0.15s ease;
-  min-width: 699px;
+  min-width: 614px;
   background-color: #fafafa;
   top: 0px;
-  margin-left: -2px;
+  margin-left: -1px;
 }
 
 .dropdown:hover,

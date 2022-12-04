@@ -122,7 +122,7 @@ export default function Home({ data }) {
       <Header page={1}></Header>
 
       <div className={styles.container}>
-        <div style={{ display: "flex", flexDirection: "row" }}>
+        <div style={{ display: "flex", flexDirection: "row", width:'' }}>
           <DashboardCard
             title={"Satisfação com a empresa"}
             value={dataByMonth[
