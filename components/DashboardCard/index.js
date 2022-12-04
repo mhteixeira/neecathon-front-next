@@ -9,12 +9,23 @@ export default function DashboardCard({
   title,
   color,
   specialCard,
-  ...props
+  onMouseOver,
+  onMouseOut
 }) {
   const [selectedCard, setSelectedCard] = useState(false);
+
+  const handleMouseOver = () => {
+    onMouseOver ? onMouseOver(): '';
+    setSelectedCard(true);
+  }
+
+  const handleMouseOut = () => {
+    onMouseOut? onMouseOut(): '';
+    setSelectedCard(false);
+  }
   return (
-    <div className={`${styles.card} ${selectedCard? styles[color + 'Selected']: ''}`} {...props} onMouseOver={() => setSelectedCard(true)}
-    onMouseOut={() => setSelectedCard(false)}>
+    <div className={`${styles.card} ${selectedCard? styles[color + 'Selected']: ''}`} onMouseOver={handleMouseOver}
+    onMouseOut={handleMouseOut}>
       <div className={styles.cardBody}>
         <div className={styles.cardTitle}>
           <h2>{title}</h2>

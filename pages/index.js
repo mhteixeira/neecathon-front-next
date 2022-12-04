@@ -15,6 +15,7 @@ import { monthString } from "../components/utils/date.js";
 Chart.register(...registerables);
 
 export default function Home({ data }) {
+  const [negativeTerms, setNegativeTerms] = useState([]);
   const [generalTerms, setGeneralTerms] = useState([]);
   const [positiveRate, setPositiveRate] = useState(0);
   const [dataByMonth, setDataByMonth] = useState({});
@@ -27,12 +28,12 @@ export default function Home({ data }) {
     const regexType = /(?<=\').+?(?=\')/; // grap 'pos' 'neg'
     let terms = feedbacks.filter(feedback => feedback.id != 2828 && feedback.id != 6898)
       .map((feedback) => {
-        console.log(feedback.id)
         return JSON.parse(feedback.comment_absa_result.split(`'`).join(`"`));
       });
     let p = [];
     let n = [];
     let keys = [];
+    let negatives = [];
     let months = [
       ...new Set(
         feedbacks.map((feedback) =>
@@ -50,15 +51,12 @@ export default function Home({ data }) {
         for (const feedback of feedbacks) {
           if (feedback.month == month && feedback.year == year) {
             count += 1;
-            if (new RegExp(regexType).test(feedback.comment_sa_result)) {
-              value += parseInt(
-                feedback.comment_sa_result.match(/[0-9].[0-9]/)[0]
-              );
-            } else {
-              value -= parseInt(
-                feedback.comment_sa_result.match(/[0-9].[0-9]/)[0]
-              );
-            }
+            console.log(feedback.comment_sa_result)
+            console.log(new RegExp(regexType).test(feedback.comment_sa_result))
+            if (feedback.comment_sa_result.match(regexType) == 'pos') {
+              console.log(feedback.comment_sa_result)
+                value += 1
+              }
           }
         }
         obj[month] = { rate: count > 0 ? (value / count) * 100 : 0 };
@@ -68,31 +66,33 @@ export default function Home({ data }) {
     setDataByMonth(datasetSeparateByMonth["2022"]);
     terms.map((data) => {
       for (const [key, value] of Object.entries(data)) {
-        keys.push(key);
-        if (value == 1) {
-          p.push(key);
+        keys.push(key.toLowerCase());
+        if (value > 0) {
+          p.push(key.toLowerCase());
         } else {
-          n.push(key);
+          n.push(key.toLowerCase());
         }
       }
     });
 
     terms = [...new Set(keys)];
     terms = terms.map((item) => {
-      let count = 0;
+      let count_positive = 0;
+      let count_negative = 0;
       let obj = {};
       for (const positiveFeedback of p) {
         if (item == positiveFeedback) {
-          count += 1;
+          count_positive += 1;
         }
       }
       for (const negativeFeedaback of n) {
         if (item == negativeFeedaback) {
-          count -= 1;
+          count_negative += 10;
         }
       }
       obj["word"] = item;
-      obj["value"] = count;
+      obj["value_negative"] = count_negative;
+      obj['value_positive'] = count_positive;
       return obj;
     });
 
@@ -175,7 +175,7 @@ export default function Home({ data }) {
             color={"green"}
           />
         </div>
-        <div className={styles.cardBar}>
+        <div className={`${styles.cardBar} ${styles.barPlot}`}>
           <h2>Visão sobre a empresa</h2>
           <Bar
             data={{
@@ -193,13 +193,29 @@ export default function Home({ data }) {
               ],
             }}
             width={1800}
-            height={250}
+            height={700}
             options={{
               scales: {
-                x: { title: { display: true, text: "Time (per month)" } },
+                x: { title: { display: true, text: "Time (per month)", font: {
+                  size: 18,
+              } },ticks: {
+                  font: {
+                      size: 18,
+                  }
+              } },
               },
               plugins: {
-                title: { display: true, text: "Positive feedbacks (%)" },
+                title: { display: true, text: "Positive feedbacks (%)", font: {
+                  size: 18,
+              }},
+                legend: {
+                  labels: {
+                      // This more specific font property overrides the global property
+                      font: {
+                          size: 18
+                      }
+                  }
+              }
               },
             }}
           />
@@ -209,8 +225,8 @@ export default function Home({ data }) {
             <DashboardCard
               title={"Melhores avaliações"}
               value={`${
-                generalTerms.sort((a, b) => b.value - a.value)[0]?.word
-              } & ${generalTerms.sort((a, b) => b.value - a.value)[1]?.word}`}
+                generalTerms.sort((a, b) => b.value_positive - a.value_positive)[0]?.word
+              } & ${generalTerms.sort((a, b) => b.value_positive - a.value_positive)[1]?.word}`}
               hidden={true}
               color={"green"}
             />
@@ -219,11 +235,11 @@ export default function Home({ data }) {
             <DashboardCard
               title={"Piores avaliações"}
               value={`${
-                generalTerms.sort((a, b) => a.value - b.value)[0]?.word
-              } & ${generalTerms.sort((a, b) => a.value - b.value)[1]?.word}`}
+                generalTerms.sort((a, b) => b.value_negative - a.value_negative).slice(2, 4)[0]?.word
+              } & ${generalTerms.sort((a, b) => b.value_negative - a.value_negative).slice(2, 4)[1]?.word}`}
               hidden={true}
-              onMouseEnter={() => setShowDropdown(true)}
-              onMouseLeave={() => setShowDropdown(false)}
+              onMouseOver={() => setShowDropdown(true)}
+              onMouseOut={() => setShowDropdown(false)}
               showDropdown={showDropdown}
               specialCard={true}
               color={"red"}
@@ -232,8 +248,8 @@ export default function Home({ data }) {
                 <div style={{ position: "relative" }}>
                   <div className={`${styles.dropdown} ${styles.selectedCard}`}>
                     <ul>
-                      <li>Companies who suffer from {generalTerms.sort((a, b) => a.value - b.value)[0]?.word} usually give more sallary to employeers</li>
-                      <li>Companies who suffer from {generalTerms.sort((a, b) => a.value - b.value)[0]?.word} usually make the environment more healthier</li>
+                      <li style={{textDecoration:'underline', cursor:'pointer'}}>What to do when employees complain about <b>{generalTerms.sort((a, b) => b.value_negative - a.value_negative)[0]?.word}</b></li>
+                      <li style={{textDecoration:'underline'}}>What to do when employees complain about <b>{generalTerms.sort((a, b) => b.value_negative - a.value_negative)[1]?.word}</b></li>
                     </ul>
                   </div>
                 </div>
@@ -251,15 +267,15 @@ export default function Home({ data }) {
               <Line
                 data={{
                   labels: generalTerms
-                    .sort((a, b) => b.value - a.value)
+                    .sort((a, b) => b.value_positive - a.value_positive)
                     .map((term) => term.word)
                     .slice(0, 10),
                   datasets: [
                     {
                       label: "Frequency",
                       data: generalTerms
-                        .sort((a, b) => b.value - a.value)
-                        .map((term) => term.value)
+                        .sort((a, b) => b.value_positive - a.value_positive)
+                        .map((term) => term.value_positive)
                         .slice(0, 10),
                       fill: false,
                       borderColor: "#0D8E0B",
@@ -277,15 +293,15 @@ export default function Home({ data }) {
               <Line
                 data={{
                   labels: generalTerms
-                    .sort((a, b) => a.value - b.value)
+                    .sort((a, b) => b.value_negative - a.value_negative)
                     .map((term) => term.word)
-                    .slice(0, 10),
+                    .slice(2, 11),
                   datasets: [
                     {
                       label: "Frequency",
                       data: generalTerms
-                        .sort((a, b) => a.value - b.value)
-                        .map((term) => term.value)
+                        .sort((a, b) => b.value_negative - a.value_negative)
+                        .map((term) => term.value_negative)
                         .slice(0, 10),
                       fill: false,
                       borderColor: "#D30000",
@@ -308,6 +324,7 @@ export async function getStaticProps() {
   const data = await res.json();
   //const res = path.join(process.cwd(), "test.json");
   //const data = JSON.parse(await fsPromises.readFile(res));
+  // const filteredData = data.sort((a, b) =>  b.id- a.id).slice(0, 100);
   return {
     props: { data },
   };
