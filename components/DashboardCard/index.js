@@ -1,18 +1,35 @@
-import styles from './DashboardCard.module.css';
+import { useState } from "react";
+import styles from "./DashboardCard.module.css";
 
-
-export default function DashboardCard(props) {
+export default function DashboardCard({
+  value,
+  hidden,
+  children,
+  showDropdown,
+  title,
+  color,
+  specialCard,
+  ...props
+}) {
+  const [selectedCard, setSelectedCard] = useState(false);
   return (
-    <div className={styles.card}>
-      <div
-        className={styles.cardBody}
-      >
+    <div className={`${styles.card} ${selectedCard? styles[color + 'Selected']: ''}`} {...props} onMouseOver={() => setSelectedCard(true)}
+    onMouseOut={() => setSelectedCard(false)}>
+      <div className={styles.cardBody}>
         <div className={styles.cardTitle}>
-          <h2>{props.title}</h2>
-          {props.value != undefined ? <h1>{props.value}{props.hidden ? '': '%'}</h1> : props.children}
+          <h2>{title}</h2>
+          {value != undefined ? (
+            <h1 className={styles[color]}>
+              {value}
+              {hidden ? "" : "%"}
+            </h1>
+          ) : (
+            children
+          )}
         </div>
-        {props.value != undefined && props.children}
+        {!specialCard && children}
       </div>
+      {specialCard && children}
     </div>
   );
 }

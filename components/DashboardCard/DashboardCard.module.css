@@ -1,6 +1,7 @@
 .card {
     margin: 1rem;
-    padding: 1.5rem;
+    
+    padding-bottom: 1.5rem;
     text-align: left;
     color: inherit;
     text-decoration: none;
@@ -8,10 +9,13 @@
     border-radius: 10px;
     transition: color 0.15s ease, border-color 0.15s ease;
     max-width: 100%;
-    min-width: 450px;
+    min-width: 455px;
+    box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
 }
 
 .cardBody {
+    
+    padding: 1.5rem;
     flex-direction: row;
     width: 100%;
     height: 100px;
@@ -29,4 +33,32 @@
 }
 .cardTitle h2 {
     margin: 0 0 1rem 0;
+}
+
+.cardHovered{
+    height: 200px;
+}
+
+.title a:hover,
+.title a:focus,
+.title a:active {
+  text-decoration: underline;
+}
+
+.green{
+    color: #0D8E0B;
+}
+
+.greenSelected{
+    border-color:#0D8E0B;
+    color: #0D8E0B;
+}
+
+.red{
+    color: #D30000;
+}
+
+.redSelected{
+    border-color: #D30000;
+    color: #D30000;
 }
