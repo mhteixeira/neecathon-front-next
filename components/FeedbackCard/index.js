@@ -7,7 +7,7 @@ export default function FeedbackCard({ data, isSelected, ...props}) {
     <>
       <div {...props} className={`${styles.userCard} ${isSelected ? styles.selectedCard : ""}`}>
           <div className={styles.personalInfo}>
-              <img src={`./images/user${data.id}.svg`}></img>
+              <img src={`./images/user${data.id}.webp`} style={{width: '80px', height: '50px', objectFit: 'cover'}}></img>
               <div className={styles.personalInfoText}>
                   <span>{data.month}/{data.year}</span>
                   <h4>{data.name}</h4>

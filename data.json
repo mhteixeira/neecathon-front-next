@@ -3,28 +3,23 @@
     {
         "0": 
         {
-            "name": "Devon Lane",
-            "job": "HR Data Analyst"
+            "sector": "Finacial"
         }, 
         "1": 
         {
-            "name": "Floyd Miles",
-            "job": "Financial Analyst"
+            "sector": "Human Resources"
         },
         "2": 
         {
-            "name": "Albert Flores",
-            "job": "CEO"
+            "sector": "Dev Team"
         },
         "3": 
         {
-            "name": "Darlene Robertson",
-            "job": "Electrical Engineer"
+            "sector": "Management"
         },
         "4": 
         {
-            "name": "Courtney Henry",
-            "job": "Mechanical Engineer"
+            "sector": "Human Resources"
         }   
     }
 }

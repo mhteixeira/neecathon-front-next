@@ -9,12 +9,12 @@ import DashboardCard from "../components/DashboardCard";
 import { registerables } from "chart.js";
 import { useEffect, useState } from "react";
 import path from "path";
-import fsPromises from "fs/promises";
+//import fsPromises from "fs/promises";
 import { monthString } from "../components/utils/date.js";
 
 Chart.register(...registerables);
 
-export default function Home({ objectData, data }) {
+export default function Home({ data }) {
   const [generalTerms, setGeneralTerms] = useState([]);
   const [positiveRate, setPositiveRate] = useState(0);
   const [dataByMonth, setDataByMonth] = useState({});
@@ -22,42 +22,50 @@ export default function Home({ objectData, data }) {
   const [showDropdown, setShowDropdown] = useState(false);
 
   const feedbacks = data;
-  const users = objectData.users;
 
   useEffect(() => {
     const regexType = /(?<=\').+?(?=\')/; // grap 'pos' 'neg'
-    let terms = feedbacks.map((feedback) =>
-      JSON.parse(feedback.comment_absa_result.split(`'`).join(`"`))
-    );
+    let terms = feedbacks.filter(feedback => feedback.id != 2828)
+      .map((feedback) => {
+        console.log(feedback.id)
+        return JSON.parse(feedback.comment_absa_result.split(`'`).join(`"`));
+      });
     let p = [];
     let n = [];
     let keys = [];
     let months = [
       ...new Set(
-        feedbacks.map((feedback) => 12 - parseInt(feedback.person_id))
+        feedbacks.map((feedback) =>
+          feedback.month == "12" ? "Dec" : feedback.month
+        )
       ),
     ];
+    let years = [...new Set(feedbacks.map((feedback) => feedback.year))];
     let datasetSeparateByMonth = {};
-    months.map((month) => {
-      let count = 0;
-      let value = 0;
-      for (const feedback of feedbacks) {
-        if (12 - parseInt(feedback.person_id) == month) {
-          count += 1;
-          if (new RegExp(regexType).test(feedback.comment_sa_result)) {
-            value += parseInt(
-              feedback.comment_sa_result.match(/[0-9].[0-9]/)[0]
-            );
-          } else {
-            value -= parseInt(
-              feedback.comment_sa_result.match(/[0-9].[0-9]/)[0]
-            );
+    years.map((year) => {
+      let obj = {};
+      for (const month of months) {
+        let count = 0;
+        let value = 0;
+        for (const feedback of feedbacks) {
+          if (feedback.month == month && feedback.year == year) {
+            count += 1;
+            if (new RegExp(regexType).test(feedback.comment_sa_result)) {
+              value += parseInt(
+                feedback.comment_sa_result.match(/[0-9].[0-9]/)[0]
+              );
+            } else {
+              value -= parseInt(
+                feedback.comment_sa_result.match(/[0-9].[0-9]/)[0]
+              );
+            }
           }
         }
+        obj[month] = { rate: count > 0 ? (value / count) * 100 : 0 };
       }
-      datasetSeparateByMonth[month] = { rate: (value / count) * 100 };
+      datasetSeparateByMonth[year] = obj;
     });
-    setDataByMonth(datasetSeparateByMonth);
+    setDataByMonth(datasetSeparateByMonth["2022"]);
     terms.map((data) => {
       for (const [key, value] of Object.entries(data)) {
         keys.push(key);
@@ -117,16 +125,19 @@ export default function Home({ objectData, data }) {
         <div style={{ display: "flex", flexDirection: "row" }}>
           <DashboardCard
             title={"Satisfação com a empresa"}
-            value={dataByMonth[new Date().getMonth() + 1]?.rate.toFixed(2)}
-            color={'green'}
+            value={dataByMonth[
+              monthString[new Date().getMonth()]
+            ]?.rate.toFixed(2)}
+            color={"green"}
           >
             <Pie
               data={{
                 datasets: [
                   {
                     data: [
-                      100 - dataByMonth[new Date().getMonth() + 1]?.rate,
-                      dataByMonth[new Date().getMonth() + 1]?.rate,
+                      100 -
+                        dataByMonth[monthString[new Date().getMonth()]]?.rate,
+                      dataByMonth[monthString[new Date().getMonth()]]?.rate,
                     ],
                     backgroundColor: ["red", "rgb(54, 162, 235)"],
                   },
@@ -146,10 +157,10 @@ export default function Home({ objectData, data }) {
           <DashboardCard
             title={"Satisfação marginal"}
             value={(
-              dataByMonth[new Date().getMonth() + 1]?.rate -
-              dataByMonth[new Date().getMonth()]?.rate
+              dataByMonth[monthString[new Date().getMonth()]]?.rate -
+              dataByMonth[monthString[new Date().getMonth() - 1]]?.rate
             ).toFixed(2)}
-            color={'green'}
+            color={"green"}
           />
           <DashboardCard
             title={"Média historíca"}
@@ -161,7 +172,7 @@ export default function Home({ objectData, data }) {
                 .reduce((partialSum, a) => partialSum + a, 0) /
               Object.keys(dataByMonth).length
             ).toFixed(2)}
-            color={'green'}
+            color={"green"}
           />
         </div>
         <div className={styles.cardBar}>
@@ -169,7 +180,7 @@ export default function Home({ objectData, data }) {
           <Bar
             data={{
               labels: Object.keys(dataByMonth).map(function (key) {
-                return monthString[parseInt(key) - 1];
+                return key;
               }),
               datasets: [
                 {
@@ -201,7 +212,7 @@ export default function Home({ objectData, data }) {
                 generalTerms.sort((a, b) => b.value - a.value)[0]?.word
               } & ${generalTerms.sort((a, b) => b.value - a.value)[1]?.word}`}
               hidden={true}
-              color={'green'}
+              color={"green"}
             />
           </div>
           <div style={{ width: "50%" }}>
@@ -215,15 +226,14 @@ export default function Home({ objectData, data }) {
               onMouseLeave={() => setShowDropdown(false)}
               showDropdown={showDropdown}
               specialCard={true}
-              color={'red'}
+              color={"red"}
             >
               {showDropdown ? (
                 <div style={{ position: "relative" }}>
                   <div className={`${styles.dropdown} ${styles.selectedCard}`}>
                     <ul>
-                      <li>Try this</li>
-                      <li>Try that</li>
-                      <li>Try third</li>
+                      <li>Companies who suffer from ${generalTerms.sort((a, b) => a.value - b.value)[0]?.word} usually give more sallary to employeers</li>
+                      <li>Companies who suffer from ${generalTerms.sort((a, b) => a.value - b.value)[0]?.word} usually make the environment more healthier</li>
                     </ul>
                   </div>
                 </div>
@@ -236,7 +246,7 @@ export default function Home({ objectData, data }) {
 
         <div style={{ display: "flex", flexDirection: "row" }}>
           <div style={{ width: "50%" }}>
-            <div className={styles.cardBar}>
+            <div className={styles.cardBarGreen}>
               <h2>Termos bem avaliados</h2>
               <Line
                 data={{
@@ -252,7 +262,7 @@ export default function Home({ objectData, data }) {
                         .map((term) => term.value)
                         .slice(0, 10),
                       fill: false,
-                      borderColor: "#742774",
+                      borderColor: "#0D8E0B",
                     },
                   ],
                 }}
@@ -262,7 +272,7 @@ export default function Home({ objectData, data }) {
             </div>
           </div>
           <div style={{ width: "50%" }}>
-            <div className={styles.cardBar}>
+            <div className={styles.cardBarRed}>
               <h2>Termos mal avaliados</h2>
               <Line
                 data={{
@@ -278,7 +288,7 @@ export default function Home({ objectData, data }) {
                         .map((term) => term.value)
                         .slice(0, 10),
                       fill: false,
-                      borderColor: "#742774",
+                      borderColor: "#D30000",
                     },
                   ],
                 }}
@@ -294,14 +304,11 @@ export default function Home({ objectData, data }) {
 }
 
 export async function getStaticProps() {
-  const filePath = path.join(process.cwd(), "data.json");
-  const jsonData = await fsPromises.readFile(filePath);
-  const objectData = JSON.parse(jsonData);
-
   const res = await fetch(`http://3.88.45.53:8000/api/analysis/?format=json`);
   const data = await res.json();
-
+  //const res = path.join(process.cwd(), "test.json");
+  //const data = JSON.parse(await fsPromises.readFile(res));
   return {
-    props: { objectData, data },
+    props: { data },
   };
 }
